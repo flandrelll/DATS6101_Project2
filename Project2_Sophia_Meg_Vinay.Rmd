@@ -1,0 +1,119 @@
+---
+title: "Project 2"
+author: "Ruofei(Sophia) Du, Meghan Phillips, Harivinay Gujjula"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: show
+    number_sections: false
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+```{r init, include=F}
+# The package "ezids" (EZ Intro to Data Science) includes some helper functions we developed for the course. 
+# Some of the frequently used functions are loadPkg(), xkabledply(), xkablesummary(), uzscale(), etc.
+# You will need to install it (once) from GitHub.
+# library(devtools)
+# devtools::install_github("physicsland/ezids")
+# Then load the package in your R session.
+library(ezids)
+library(dplyr)
+```
+
+```{r setup, include=FALSE}
+# Some of common RMD options (and the defaults) are: 
+# include=T, eval=T, echo=F, results='hide'/'asis'/'markup',..., collapse=F, warning=T, message=T, error=T, cache=T, fig.width=6, fig.height=4, fig.dim=c(6,4) #inches, fig.align='left'/'center','right', 
+knitr::opts_chunk$set(results="markup", warning = F, message = F)
+# Can globally set option for number display format.
+options(scientific=T, digits = 3) 
+# options(scipen=9, digits = 3) 
+```
+
+# Introduction 
+Our dataset was obtained from Kaggle by researching music-related dataset. The dataset contains more than 114,000 observations and 21 variables related to Spotify tracks. These variables include track information such as track name and artist name, the popularity of the songs, as well as several audio features, including energy, danceability, valence, tempo, and other characteristics that describe the musical properties of each song.
+```{r}
+spo <- read.csv("spotifydataset.csv")
+str(spo)
+summary(spo)
+dim(spo)
+```
+
+# Research Questions
+
+There are many possible ways to explore this dataset. In this project, we are particularly interested in understanding what makes a song popular.
+
+First, we explore whether genre plays a role in song popularity. Since artist popularity may influence the popularity of a track, we remove the artist variable from our analysis to focus only on the audio features of the songs.
+
+This leads to several research questions:
+
+What are the distributional characteristics of key variables (popularity, energy, danceability, and valence), and are any transformations or outlier treatments needed prior to modeling? (EDA) - Vinay
+
+Do audio features exhibit linear relationships with track popularity? (simple linear regression) - Vinay
+How well does each individual audio feature predict popularity using simple linear regression models? (4 audio feature vs popularity) - Vinay
+How well does audio feature and genre predict popularity using linear regression models? (audio features+ genre vs polularity) - Sophia
+How does genre influence track popularity, and does including genre improve the explanatory power of the model? (comparison) - Sophia
+After controlling for genre, do audio features remain significant predictors of popularity? 
+Does including genre and explicitness improve the model’s ability to predict popularity?	(audio features+ genre + explicitness vs popularity) - Meg
+(Conclusion - Meg)
+
+
+# Data Cleaning
+To investigate these research questions, we first check to see if we need to clean the dataset and remove columns that are not relevant to our analysis.
+
+From the summary, we can see that some tempo have a value of 0. However, the tempo (BPM) of a song cannot realistically be 0. Although this value is not recorded as NA in the dataset, it still represents an invalid observation and should be removed during the data cleaning process.
+
+Based on the information provided in the dataset, we focus on variables that may influence song popularity. In particular, we examine whether audio features or genre have any effect on the popularity of songs. Therefore, we select the relevant variables, including popularity, several audio features (danceability, energy, valence, and tempo), the explicit content indicator, and the track genre.
+```{r}
+spo1 <- spo[, c(
+  "popularity",
+  "danceability",
+  "energy",
+  "valence",
+  "tempo",
+  "explicit",
+  "track_genre"
+)]
+```
+```{r, include=FALSE}
+str(spo1)
+summary(spo1)
+colSums(is.na(spo1))
+```
+```{r, include=FALSE}
+spo1$explicit <- as.factor(spo1$explicit)
+str(spo1)
+```
+```{r}
+sum(spo1$tempo == 0)
+```
+```{r}
+spo1 <- spo1[spo1$tempo > 0, ]
+sum(spo1$tempo == 0)
+```
+```{r, include=FALSE}
+write.csv(spo1,"cleaned_spodata.csv")
+```
+
+#EDA
+
+
+# Audio Features vs Popularity
+```{r}
+m1 <- lm(popularity ~ danceability + energy + valence + tempo, data = spo1)
+summary(m1)
+plot(m1)
+```
+
+# Audio Features + Genre vs Popularity
+```{r}
+m2 <- lm(popularity ~ danceability + energy + valence + tempo + track_genre, data = spo1)
+summary(m2)
+plot(m2)
+```
+
+# Audio Features + Genre + Explict
