@@ -35,8 +35,11 @@ options(scientific=T, digits = 3)
 ```
 
 # Introduction 
-Our dataset was obtained from Kaggle by researching music-related dataset. The dataset contains more than 114,000 observations and 21 variables related to Spotify tracks. These variables include track information such as track name and artist name, the popularity of the songs, as well as several audio features, including energy, danceability, valence, tempo, and other characteristics that describe the musical properties of each song.
-```{r}
+Our dataset was obtained from Kaggle by researching music-related dataset. 
+The dataset contains more than 114,000 observations and 21 variables related to Spotify tracks. These variables include track information such as track name and artist name, the popularity of the songs, as well as several audio features, including energy, danceability, valence, tempo, and other characteristics that describe the musical properties of each song.
+In addition, the dataset is evenly distributed across genres, which allows for fair comparisons when analyzing the effect of genre on popularity.
+
+```{r, include = F}
 spo <- read.csv("spotifydataset.csv")
 str(spo)
 summary(spo)
@@ -47,16 +50,17 @@ dim(spo)
 
 There are many possible ways to explore this dataset. In this project, we are particularly interested in understanding what makes a song popular.
 
-First, we explore whether genre plays a role in song popularity. Since artist popularity may influence the popularity of a track, we remove the artist variable from our analysis to focus only on the audio features of the songs.
+First, we are interested in whether the audio features affects a song's popularity. By analyzing the relationship between popularity and audio features, we learn whether listeners are primarily attracted to the musical characteristics of a track .
+Next, we explore whether genre plays a role in song popularity. Since artist popularity may influence the popularity of a track, we exclude artist-related variable in our analysis to focus only on the audio features of the songs themselves. 
+Finally, we investigate whether the explicitness has any additional effect on popularity beyond audio features and genre.
 
 This leads to several research questions:
 
-What are the distributional characteristics of key variables (popularity, energy, danceability, and valence), and are any transformations or outlier treatments needed prior to modeling? (EDA) - Vinay
-
-Do audio features exhibit linear relationships with track popularity? (simple linear regression) - Vinay
+What are the distributional characteristics of key variables (popularity, energy, danceability, and valence), and are any transformations or outlier treatments needed prior to modeling? (EDA) - Vinay and Meg
+Do audio features exhibit linear relationships with track popularity? (simple linear regression, scatter plots or something?) - Vinay
 How well does each individual audio feature predict popularity using simple linear regression models? (4 audio feature vs popularity) - Vinay
 How well does audio feature and genre predict popularity using linear regression models? (audio features+ genre vs polularity) - Sophia
-How does genre influence track popularity, and does including genre improve the explanatory power of the model? (comparison) - Sophia
+How does genre influence track popularity, and does including genre improve the explanatory power of the model? (comparison and tree) - Sophia
 After controlling for genre, do audio features remain significant predictors of popularity? 
 Does including genre and explicitness improve the model’s ability to predict popularity?	(audio features+ genre + explicitness vs popularity) - Meg
 (Conclusion - Meg)
@@ -65,9 +69,12 @@ Does including genre and explicitness improve the model’s ability to predict p
 # Data Cleaning
 To investigate these research questions, we first check to see if we need to clean the dataset and remove columns that are not relevant to our analysis.
 
-From the summary, we can see that some tempo have a value of 0. However, the tempo (BPM) of a song cannot realistically be 0. Although this value is not recorded as NA in the dataset, it still represents an invalid observation and should be removed during the data cleaning process.
+From the summary, we can see that some tempo have a value of 0. However, the tempo (BPM) of a song cannot realistically be 0. Although this value is not recorded as NA in the dataset, it still represents an invalid observation. At this point, although tempo = 0 is not realistic, we retain these observations initially to avoid unnecessary data loss, and assess their impact during modeling.
 
 Based on the information provided in the dataset, we focus on variables that may influence song popularity. In particular, we examine whether audio features or genre have any effect on the popularity of songs. Therefore, we select the relevant variables, including popularity, several audio features (danceability, energy, valence, and tempo), the explicit content indicator, and the track genre.
+
+Variables such as track name and artist are excluded, as they are not directly used in modeling process. As no missing values were detected in the selected variables, no additional removal of observations was required. 
+
 ```{r}
 spo1 <- spo[, c(
   "popularity",
@@ -81,18 +88,12 @@ spo1 <- spo[, c(
 ```
 ```{r, include=FALSE}
 str(spo1)
-summary(spo1)
 colSums(is.na(spo1))
 ```
 ```{r, include=FALSE}
 spo1$explicit <- as.factor(spo1$explicit)
-str(spo1)
 ```
 ```{r}
-sum(spo1$tempo == 0)
-```
-```{r}
-spo1 <- spo1[spo1$tempo > 0, ]
 sum(spo1$tempo == 0)
 ```
 ```{r, include=FALSE}
