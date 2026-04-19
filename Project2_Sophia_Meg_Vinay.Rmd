@@ -118,3 +118,32 @@ plot(m2)
 ```
 
 # Audio Features + Genre + Explict
+
+
+# Audio Features + Genre + Explict - Meg 
+Does just explicitness help predict popularity?	We know there is statistical correlation, but...
+```{r}
+exp_lm<- lm(popularity ~ explicit, data=spo1)
+summary(exp_lm)
+```
+outcome: explicitTRUE coefficient is 3.516, meaning on average explicit songs are about 3.5 points higher in popularity than non-explicit. The p-value is incredibly small, meaning there is statistical significance. However, the R-squared model fit is showing that only 19% of the variation in popularity is explained by whether a song is explicit. Also, the Residual Standard Error being 22.3 shows high variation. Explicitness alone is not a main driver of if a song has higher popularity.
+
+
+
+#Does just genre and explicitness help predict popularity?	
+```{r}
+
+gen_exp_lm<- lm(popularity ~ track_genre + explicit, data=spo1)
+summary(gen_exp)
+
+```
+The adjusted R-squared is 0.255, meaning 25.5% of the occurrences can be explained by 
+
+#ANOVA - is adding explicitness better?
+```{r}
+anova(exp_lm, gen_exp_lm)
+```
+F statistic being 343 shows significant increase from the 222 of just explicitness. While explicitness alone explains very little variation in popularity (R² ≈ 0.002), adding track_genre significantly improves the model (F = 343, p < 2e-16) and increases the explained variance by about 25%. This indicates that genre is a strong and meaningful predictor of song popularity.
+
+
+
