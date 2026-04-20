@@ -23,6 +23,9 @@ output:
 # Then load the package in your R session.
 library(ezids)
 library(dplyr)
+library(ggplot2)
+library(rpart)
+library(rpart.plot)
 ```
 
 ```{r setup, include=FALSE}
@@ -111,14 +114,91 @@ plot(m1)
 ```
 
 # Audio Features + Genre vs Popularity
-```{r}
+## Linear Regression Model
+```{r, include=FALSE}
 m2 <- lm(popularity ~ danceability + energy + valence + tempo + track_genre, data = spo1)
 summary(m2)
-plot(m2)
 ```
+The multiple regression model includes both audio features and genre as predictors for popularity. Comparing the first model with only audio features as predictors, the second model shows a great improvement in explanatory power. The R-squared value increased from 0.00621 to 0.2566. This means that model 2 could explain about 25.66% of the variation in track popularity, while the model 1 could only explain 0.62% of the variance in track popularity. 
 
-# Audio Features + Genre + Explict
+The inclusion of genres significantly improves our model, suggesting that genre is a key predictor of song popularity. The coefficient for genre vary widely, which suggests the large differences in popularity across different music genres. Although some of the audio features such as danceability and valence has a small p-value and are statistically significant to predicting the popularity, their effect sizes are much smaller than including genres. Although audio features contributes in predicting the popularity, they are not the primary predictors. 
 
+Overall, the result of model 2 indicates that genres are important predictors compared to audio features. 
+
+## Visualization
+### Top 10 Genre
+```{r}
+genre_avg <- spo1 %>%
+  group_by(track_genre) %>%
+  summarise(mean_pop = mean(popularity)) %>%
+  arrange(desc(mean_pop))
+top10 <- genre_avg %>%
+  slice_head(n = 10)
+bot10 <- genre_avg %>%
+  slice_tail(n = 10)
+```
+To better visualize our result, we calculate the average popularity of each genre and arrange them in a descending order. 
+```{r}
+ggplot(top10,
+       aes(x = reorder(track_genre, mean_pop),
+           y = mean_pop,
+           fill = mean_pop)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Top 10 Genres Ranked by Average Popularity",
+    x = "Genre",
+    y = "Average Popularity of the genre"
+  ) +
+  theme_minimal() +
+  scale_fill_gradient(low = "lightblue", high = "darkblue")
+```
+```{r}
+ggplot(bot10,
+       aes(x = reorder(track_genre, mean_pop),
+           y = mean_pop,
+           fill = mean_pop)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Bottom 10 Genres Ranked by Average Popularity",
+    x = "Genre",
+    y = "Average Popularity of the genre"
+  ) +
+  theme_minimal() +
+  scale_fill_gradient(low = "lightpink", high = "salmon")
+```
+The bar charts display the top and bottom 10 genres ranked by their average popularity. A clear disparity can be observed between the most and least popular genres. Popular genres such as pop-film and k-pop have an average popularity score close to 60， while on the other side, unpopular genres like iranian and romance have average popularity score below 10. 
+
+The large differences between the top genres and bottom genres suggest that genre is a dominant factor influencing track popularity.
+
+The result strongly align with the result of our regression model findings, which concludes that the inclusion of genre led to a substantial improvement in the model. The wide range of average popularity across different genres suggest that genre is a significant factor influencing the popularity.
+
+The result is consistent with earlier exploratory analysis. 
+
+## Regression Tree
+```{r}
+set.seed(1123)
+
+tree_model <- rpart(
+  popularity ~ danceability + energy + valence + tempo + track_genre + explicit,
+  data = spo1,
+  method = "anova",
+  control = rpart.control(maxdepth = 3)
+)
+
+rpart.plot(
+  tree_model,
+  type = 2,
+  extra = 1,
+  fallen.leaves = TRUE,
+  cex = 0.6,
+  faclen = 0
+)
+```
+```{r}
+path.rpart(tree_model, nodes = rownames(tree_model$frame))
+```
 
 # Audio Features + Genre + Explict - Meg 
 Does just explicitness help predict popularity?	We know there is statistical correlation, but...
