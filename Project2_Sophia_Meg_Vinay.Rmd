@@ -176,6 +176,32 @@ The result strongly align with the result of our regression model findings, whic
 
 The result is consistent with earlier exploratory analysis. 
 
+##Linear relationships between each individual audio feature and popularity
+
+```{r}
+ggplot(spo1, aes(x = danceability, y = popularity)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", color = "red") +
+  theme_minimal()
+
+ggplot(spo1, aes(x = energy, y = popularity)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", color = "red") +
+  theme_minimal()
+
+ggplot(spo1, aes(x = valence, y = popularity)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", color = "red") +
+  theme_minimal()
+
+ggplot(spo1, aes(x = tempo, y = popularity)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", color = "red") +
+  theme_minimal()
+```
+
+
+
 ## Regression Tree
 ```{r}
 set.seed(1123)
