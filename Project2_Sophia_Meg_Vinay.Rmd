@@ -199,6 +199,22 @@ ggplot(spo1, aes(x = tempo, y = popularity)) +
   geom_smooth(method = "lm", color = "red") +
   theme_minimal()
 ```
+## audio feature prediction of popularity using simple linear regression models
+
+```{r}
+lm_dance <- lm(popularity ~ danceability, data = spo1)
+summary(lm_dance)
+
+lm_energy <- lm(popularity ~ energy, data = spo1)
+summary(lm_energy)
+
+lm_valence <- lm(popularity ~ valence, data = spo1)
+summary(lm_valence)
+
+lm_tempo <- lm(popularity ~ tempo, data = spo1)
+summary(lm_tempo)
+```
+
 
 
 
