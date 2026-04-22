@@ -364,5 +364,11 @@ anova(exp_lm, gen_exp_lm)
 ```
 F statistic being 343 shows significant increase from the 222 of just explicitness. While explicitness alone explains very little variation in popularity (R² ≈ 0.002), adding track_genre significantly improves the model (F = 343, p < 2e-16) and increases the explained variance by about 25%. This indicates that genre is a strong and meaningful predictor of song popularity.
 
-
+```{r}
+m3 <- lm(popularity ~ danceability + energy + valence + tempo + track_genre + explicit, data = spo1)
+summary(m3)
+```
+```{r}
+anova(m1, m2, m3)
+```
 
