@@ -26,6 +26,7 @@ library(dplyr)
 library(ggplot2)
 library(rpart)
 library(rpart.plot)
+library(tidyr)
 ```
 
 ```{r setup, include=FALSE}
@@ -103,14 +104,53 @@ sum(spo1$tempo == 0)
 write.csv(spo1,"cleaned_spodata.csv")
 ```
 
-#EDA
+# EDA
 
+
+## Linear relationships between each individual audio feature and popularity
+
+```{r}
+ggplot(spo1, aes(x = danceability, y = popularity)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", color = "red") +
+  theme_minimal()
+
+ggplot(spo1, aes(x = energy, y = popularity)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", color = "red") +
+  theme_minimal()
+
+ggplot(spo1, aes(x = valence, y = popularity)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", color = "red") +
+  theme_minimal()
+
+ggplot(spo1, aes(x = tempo, y = popularity)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm", color = "red") +
+  theme_minimal()
+```
+## audio feature prediction of popularity using simple linear regression models
+
+```{r}
+lm_dance <- lm(popularity ~ danceability, data = spo1)
+summary(lm_dance)
+
+lm_energy <- lm(popularity ~ energy, data = spo1)
+summary(lm_energy)
+
+lm_valence <- lm(popularity ~ valence, data = spo1)
+summary(lm_valence)
+
+lm_tempo <- lm(popularity ~ tempo, data = spo1)
+summary(lm_tempo)
+```
 
 # Audio Features vs Popularity
 ```{r}
 m1 <- lm(popularity ~ danceability + energy + valence + tempo, data = spo1)
 summary(m1)
-plot(m1)
+anova(m1)
 ```
 
 # Audio Features + Genre vs Popularity
@@ -118,6 +158,56 @@ plot(m1)
 ```{r, include=FALSE}
 m2 <- lm(popularity ~ danceability + energy + valence + tempo + track_genre, data = spo1)
 summary(m2)
+anova(m1, m2)
+```
+```{r}
+library(kableExtra)
+
+genre_highlights <- data.frame(
+  Genre = c("pop-film", "k-pop", "sad", "grunge", "indian",
+            "—",
+            "iranian", "romance", "latin", "detroit-techno", "chicago-house"),
+  Coefficient = c("+17.22", "+14.66", "+8.84", "+7.95", "+7.11",
+                  "—",
+                  "-39.77", "-38.59", "-34.03", "-32.14", "-30.60"),
+  Category = c(rep("Top 5", 5), "—", rep("Bottom 5", 5))
+)
+
+genre_highlights %>%
+  kbl(caption = "Top 5 and Bottom 5 Genres by Coefficient (vs. Acoustic baseline)",
+      align = c("l", "c", "c"),
+      col.names = c("Genre", "Coefficient", "")) %>%
+  kable_styling(full_width = FALSE, position = "center") %>%
+  row_spec(0, bold = TRUE, background = "grey", color = "white") %>%
+  row_spec(1:5, background = "lightblue") %>% 
+  row_spec(6, background = "white") %>% 
+  row_spec(7:11, background = "lightpink") %>%
+  column_spec(2, bold = TRUE)
+audio_coef <- data.frame(
+  `Audio Feature` = c("Danceability", "Energy", "Valence", "Tempo"),
+  Coefficient = c("+7.49", "-1.01", "-5.58", "+0.009"),
+  `p-value` = c("< 0.001", "0.002", "< 0.001", "< 0.001"),
+  check.names = FALSE
+)
+
+audio_coef %>%
+  kbl(caption = "Audio Feature Coefficients (Model 2)",
+      align = c("l", "c", "c")) %>%
+  kable_styling(full_width = FALSE, position = "center") %>%
+  row_spec(0, bold = TRUE, background = "gray", color = "white") %>%
+  column_spec(2, bold = TRUE)
+model_comp <- data.frame(
+  ` ` = c("R²", "Adj R²", "RSE", "F-statistic"),
+  `Model 1 (Audio Only)` = c("0.621%", "0.621%", "22.25", "178.9"),
+  `Model 2 (Audio + Genre)` = c("25.74%", "25.66%", "19.24", "336.9"),
+  check.names = FALSE
+)
+
+model_comp %>%
+  kbl(align = c("l", "c", "c")) %>%
+  kable_styling(full_width = FALSE, position = "center") %>%
+  row_spec(0, bold = TRUE, background = "gray", color = "white") %>%
+  column_spec(3, background = "lightblue", bold = TRUE)
 ```
 The multiple regression model includes both audio features and genre as predictors for popularity. Comparing the first model with only audio features as predictors, the second model shows a great improvement in explanatory power. The R-squared value increased from 0.00621 to 0.2566. This means that model 2 could explain about 25.66% of the variation in track popularity, while the model 1 could only explain 0.62% of the variance in track popularity. 
 
@@ -176,48 +266,6 @@ The result strongly align with the result of our regression model findings, whic
 
 The result is consistent with earlier exploratory analysis. 
 
-##Linear relationships between each individual audio feature and popularity
-
-```{r}
-ggplot(spo1, aes(x = danceability, y = popularity)) +
-  geom_point(alpha = 0.3) +
-  geom_smooth(method = "lm", color = "red") +
-  theme_minimal()
-
-ggplot(spo1, aes(x = energy, y = popularity)) +
-  geom_point(alpha = 0.3) +
-  geom_smooth(method = "lm", color = "red") +
-  theme_minimal()
-
-ggplot(spo1, aes(x = valence, y = popularity)) +
-  geom_point(alpha = 0.3) +
-  geom_smooth(method = "lm", color = "red") +
-  theme_minimal()
-
-ggplot(spo1, aes(x = tempo, y = popularity)) +
-  geom_point(alpha = 0.3) +
-  geom_smooth(method = "lm", color = "red") +
-  theme_minimal()
-```
-## audio feature prediction of popularity using simple linear regression models
-
-```{r}
-lm_dance <- lm(popularity ~ danceability, data = spo1)
-summary(lm_dance)
-
-lm_energy <- lm(popularity ~ energy, data = spo1)
-summary(lm_energy)
-
-lm_valence <- lm(popularity ~ valence, data = spo1)
-summary(lm_valence)
-
-lm_tempo <- lm(popularity ~ tempo, data = spo1)
-summary(lm_tempo)
-```
-
-
-
-
 ## Regression Tree
 ```{r}
 set.seed(1123)
@@ -232,14 +280,63 @@ tree_model <- rpart(
 rpart.plot(
   tree_model,
   type = 2,
-  extra = 1,
+  extra = 0,
   fallen.leaves = TRUE,
-  cex = 0.6,
-  faclen = 0
+  cex = 1,
+  box.palette = "Blues",
+  branch.lty = 3,
+  shadow.col = "gray"
 )
 ```
 ```{r}
 path.rpart(tree_model, nodes = rownames(tree_model$frame))
+```
+## Audio Features by Branches (Standardized)
+```{r}
+spo1$leaf <- tree_model$where
+branch_summary <- spo1 %>%
+  group_by(leaf) %>%
+  summarise(
+    danceability = mean(danceability),
+    energy = mean(energy),
+    valence = mean(valence),
+    tempo = mean(tempo),
+    .groups = "drop"
+  ) %>%
+  mutate(
+    leaf_label = case_when(
+      leaf == 3 ~ "Low",
+      leaf == 4 ~ "Lower-Mid",
+      leaf == 6 ~ "Upper-Mid",
+      leaf == 7 ~ "High"
+    )
+  )
+branch_scaled <- branch_summary %>%
+  mutate(
+    danceability = scale(danceability)[,1],
+    energy = scale(energy)[,1],
+    valence = scale(valence)[,1],
+    tempo = scale(tempo)[,1]
+  )
+branch_long <- branch_scaled %>%
+  pivot_longer(
+    cols = c(danceability, energy, valence, tempo),
+    names_to = "feature",
+    values_to = "value"
+  )
+branch_long$leaf_label <- factor(
+  branch_long$leaf_label,
+  levels = c("Low", "Lower-Mid", "Upper-Mid", "High")
+)
+ggplot(branch_long, aes(x = feature, y = leaf_label, fill = value)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient2(low = "blue", mid = "white", high = "red") +
+  labs(
+    title = "Audio Features by Tree Branch (Standardized)",
+    x = "Audio Feature",
+    y = "Tree Branch"
+  ) +
+  theme_minimal()
 ```
 
 # Audio Features + Genre + Explict - Meg 
