@@ -4,7 +4,7 @@ author: "Ruofei(Sophia) Du, Meghan Phillips, Harivinay Gujjula"
 date: "`r Sys.Date()`"
 output:
   html_document:
-    code_folding: show
+    code_folding: hide
     number_sections: false
     toc: yes
     toc_depth: 3
@@ -61,14 +61,19 @@ Finally, we investigate whether the explicitness has any additional effect on po
 
 This leads to several research questions:
 
-What are the distributional characteristics of key variables (popularity, energy, danceability, and valence), and are any transformations or outlier treatments needed prior to modeling? (EDA) - Vinay and Meg
-Do audio features exhibit linear relationships with track popularity? (simple linear regression, scatter plots or something?) - Vinay
-How well does each individual audio feature predict popularity using simple linear regression models? (4 audio feature vs popularity) - Vinay
-How well does audio feature and genre predict popularity using linear regression models? (audio features+ genre vs polularity) - Sophia
-How does genre influence track popularity, and does including genre improve the explanatory power of the model? (comparison and tree) - Sophia
+What are the distributional characteristics of key variables (popularity, energy, danceability, and valence), and are any transformations or outlier treatments needed prior to modeling? 
+
+Do audio features exhibit linear relationships with track popularity?
+
+How well does each individual audio feature predict popularity using simple linear regression models? 
+
+How well does audio feature and genre predict popularity using linear regression models?
+
+How does genre influence track popularity, and does including genre improve the explanatory power of the model? 
+
 After controlling for genre, do audio features remain significant predictors of popularity? 
-Does including genre and explicitness improve the model’s ability to predict popularity?	(audio features+ genre + explicitness vs popularity) - Meg
-(Conclusion - Meg)
+
+Does including genre and explicitness improve the model’s ability to predict popularity?	(audio features+ genre + explicitness vs popularity)
 
 
 # Data Cleaning
