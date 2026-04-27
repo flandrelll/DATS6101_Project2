@@ -497,3 +497,5 @@ summary(m3)
 anova(m1, m2, m3)
 ```
 
+This shows the model 3 has slight improvement over model 2, but overall, adding the genre coefficient has the greatest impact on the RSS. 
+
