@@ -28,7 +28,6 @@ library(rpart)
 library(rpart.plot)
 library(tidyr)
 library(kableExtra)
-library(corrplot)
 ```
 
 ```{r setup, include=FALSE}
@@ -107,36 +106,7 @@ write.csv(spo1,"cleaned_spodata.csv")
 ```
 
 # EDA
-```{r}
-# Popularity distribution
- ggplot(spo1, aes(x = popularity)) +
-  geom_histogram(bins = 30, fill = "blue", color = "black") +
-  theme_minimal()
 
-#Popularity correlation values
-numeric_vars <- spo1 %>%
-  select(where(is.numeric))
-
-cor_matrix <- cor(numeric_vars, use = "complete.obs")
-cor_with_pop <- cor_matrix["popularity", ]
-sort(cor_with_pop, decreasing = TRUE)
-
-#Popularity distribution for top 25 genres
-spo1 %>%
-  group_by(track_genre) %>%
-  summarise(avg_popularity = mean(popularity, na.rm = TRUE)) %>%
-  arrange(desc(avg_popularity)) %>%
-  top_n(25) %>%
-  ggplot(aes(x = reorder(track_genre, avg_popularity), y = avg_popularity)) +
-  geom_col() +
-  coord_flip() +
-  theme_minimal()
-```
-Key Observations made from this analysis would be:
-
-1. Most songs on Spotify are not highly popular: The histogram of track popularity shows a heavily right-skewed distribution, with a large concentration of tracks at very low popularity values (close to 0). A majority of tracks fall within the 20–60 popularity range, while very few tracks achieve extremely high popularity (>80). 
-2. Correlation with Popularity is extremely weak: The correlation analysis reveals that all examined audio features have extremely weak linear relationships with popularity.
-3. Average popularity varies across genres: Genre plays a more meaningful role in explaining popularity than individual audio features, suggesting that there may be audience-driven or cultural influences affecting popularity. 
 
 ## Linear relationships between each individual audio feature and popularity
 
@@ -161,7 +131,6 @@ ggplot(spo1, aes(x = tempo, y = popularity)) +
   geom_smooth(method = "lm", color = "red") +
   theme_minimal()
 ```
-Conclusion of the above analysis: The scatterplots of popularity against danceability, energy, valence, and tempo all show highly dispersed point clouds with no clear linear pattern, indicating weak relationships between these audio features and popularity. While the fitted regression lines (in red) suggest slight trends—such as a small positive association for danceability and tempo, a negligible relationship for energy, and a slight negative trend for valence—the slopes are nearly flat across all plots. This visual evidence aligns with the regression results, confirming that although some relationships may be statistically significant due to the large sample size, they are not practically meaningful.
 ## audio feature prediction of popularity using simple linear regression models
 
 ```{r}
@@ -177,9 +146,6 @@ summary(lm_valence)
 lm_tempo <- lm(popularity ~ tempo, data = spo1)
 summary(lm_tempo)
 ```
-
-Conclusion from the above analysis: Although some audio features like danceability and valence are statistically significant predictors of popularity, their explanatory power is extremely low. This indicates that popularity is not driven by individual features, but likely by more complex combinations of characteristics and external factors.
-
 ## Audio Features vs Popularity
 ```{r}
 m1 <- lm(popularity ~ danceability + energy + valence + tempo, data = spo1)
@@ -485,7 +451,7 @@ outcome: explicitTRUE coefficient is 3.516, meaning on average explicit songs ar
 ```{r}
 
 gen_exp_lm<- lm(popularity ~ track_genre + explicit, data=spo1)
-summary(gen_exp_lm)
+summary(gen_exp)
 
 ```
 The adjusted R-squared is 0.255, meaning 25.5% of the occurrences can be explained by 
