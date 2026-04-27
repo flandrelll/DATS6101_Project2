@@ -478,7 +478,7 @@ outcome: explicitTRUE coefficient is 3.516, meaning on average explicit songs ar
 ```{r}
 
 gen_exp_lm<- lm(popularity ~ track_genre + explicit, data=spo1)
-summary(gen_exp)
+summary(gen_exp_lm)
 
 ```
 The adjusted R-squared is 0.255, meaning 25.5% of the occurrences can be explained by 
