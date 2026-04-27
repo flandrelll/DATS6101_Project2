@@ -27,6 +27,7 @@ library(ggplot2)
 library(rpart)
 library(rpart.plot)
 library(tidyr)
+library(kableExtra)
 ```
 
 ```{r setup, include=FALSE}
@@ -191,8 +192,6 @@ summary(m2)
 anova(m1, m2)
 ```
 ```{r}
-library(kableExtra)
-
 genre_highlights <- data.frame(
   Genre = c("pop-film", "k-pop", "sad", "grunge", "indian",
             "—",
@@ -238,6 +237,7 @@ model_comp %>%
   row_spec(0, bold = TRUE, background = "gray", color = "white") %>%
   column_spec(3, background = "lightblue", bold = TRUE)
 ```
+
 The multiple regression model includes both audio features and genre as predictors for popularity. Comparing the first model with only audio features as predictors, the second model shows a great improvement in explanatory power. The R-squared value increased from 0.00621 to 0.2566. This means that model 2 could explain about 25.66% of the variation in track popularity, while the model 1 could only explain 0.62% of the variance in track popularity. 
 
 The inclusion of genres significantly improves our model, suggesting that genre is a key predictor of song popularity. The coefficient for genre vary widely, which suggests the large differences in popularity across different music genres. Although some of the audio features such as danceability and valence has a small p-value and are statistically significant to predicting the popularity, their effect sizes are much smaller than including genres. Although audio features contributes in predicting the popularity, they are not the primary predictors. 
@@ -287,6 +287,7 @@ ggplot(bot10,
   theme_minimal() +
   scale_fill_gradient(low = "lightpink", high = "salmon")
 ```
+
 The bar charts display the top and bottom 10 genres ranked by their average popularity. A clear disparity can be observed between the most and least popular genres. Popular genres such as pop-film and k-pop have an average popularity score close to 60， while on the other side, unpopular genres like iranian and romance have average popularity score below 10. 
 
 The large differences between the top genres and bottom genres suggest that genre is a dominant factor influencing track popularity.
@@ -317,12 +318,13 @@ rpart.plot(
   shadow.col = "gray"
 )
 ```
-```{r}
+```{r, include = false}
 path.rpart(tree_model, nodes = rownames(tree_model$frame))
 ```
+
 A regression tree was grown to further understand how genre and audio features influence the popularity. In our tree here, genre is the primary splitting factor, and we reach a max depth of 3, which resulted in 4 branches in the end. The tree tries to split the genres based on their popularity and minimize the variance in popularity within the leaf. 
 
-The lowest popularity group has an average popularity around 12. The major genre in this leaf includes classical, jazz, romance and some other classical and slow genres. The lower-mid group has an average popularity around 25. The major genre in the lower-mid leaf includes country and some niche electronics genres, which is more upbeat than the lowest popularity group genres. The upper-mid group has an average popularity around 36, with some even more upbeat genres such as indie, hip-hop, etc. The highest popularity group reaches around 46. This leaf includes genres such as pop, kpop, electronic music, etc. 
+The resulting branches show clear differences in average popularity levels. The lowest group has an average popularity of around 12 and is dominated by slower, more traditional genres such as classical and jazz. The lower-mid group has an average of around 25 and includes more niche and moderately upbeat genres. The upper-mid group reaches around 36 and contains even more contemporary genres such as indie and hip-hop. The highest popularity group has an average around 46 and is dominated by mainstream and highly popular genres such as pop, K-pop, and electronic music.
 
 Overall, the tree suggests a clear gradient in popularity across genre groups, with more mainstream and modern genres associated with higher popularity levels.
 
@@ -373,10 +375,19 @@ ggplot(branch_long, aes(x = feature, y = leaf_label, fill = value)) +
   ) +
   theme_minimal()
 ```
-At this point, 
+
+To better understand the characteristics of each branch, we examine the average audio features within each leaf using a standardized heatmap. The heatmap showss clear differences in audio characteristics across the four branches identified by the regression tree. 
+
+The lowest popularity group is associated with consistently low levels of energy and tempo, suggesting that less dynamic tracks tend to perform poorly. In contrast, the lower-mid and upper-mid groups show higher values across most audio features, suggesting that more engaging and rhythmically active songs are more likely to achieve moderate levels of popularity. 
+
+However, it is particularly interesting to observe that the highest popularity group has a higher tempo but relatively lower valence, indicating that fast-paced songs do not necessarily need to be emotionally positive to be successful. 
+
+This suggests that highly popular songs do not share a single, consistent audio profile. Instead, different combinations of audio features may lead to high popularity. This variability helps explain why audio features alone account for only a small proportion of the variation in popularity in our regression models.
+
+Overall, these patterns suggest that while genre determines the primary grouping of tracks, audio features help explain differences in popularity within each group in some way. 
 
 ## Logistic Regression
-```{r}
+```{r, include=FALSE}
 spo1$pop_any <- ifelse(spo1$popularity > 0, 1, 0)
 spo1$pop_high <- ifelse(spo1$popularity >= 60, 1, 0)
 model_logit_any <- glm(
@@ -392,6 +403,39 @@ model_logit_high <- glm(
 summary(model_logit_any)
 summary(model_logit_high)
 ```
+```{r}
+library(kableExtra)
+
+logit_table <- data.frame(
+  Feature = c("Danceability", "Energy", "Valence", "Tempo", "Explicit (True)"),
+  `Any Popular (>1)` = c(1.66, 1.07, 0.53, 1.002, 1.21),
+  `High Popular (≥60)` = c(2.03, 1.02, 0.78, 1.00, 1.38)
+)
+
+logit_table %>%
+  kbl(
+    caption = "Logistic Regression: Odds Ratios for Audio Features",
+    align = c("l", "c", "c")
+  ) %>%
+  kable_styling(full_width = FALSE, position = "center") %>%
+  row_spec(0, bold = TRUE, background = "gray", color = "white") %>%
+  column_spec(2:3, bold = TRUE) %>%
+  footnote(
+    general = "Odds ratios shown. Values >1 indicate positive effects. Baseline: acoustic genre, non-explicit tracks."
+  )
+```
+
+Based on our exploratory data analysis, we observe that the distribution of popularity is highly skewed, with a large proportion of tracks having zero popularity. This raises an important question regarding how “popularity” should be defined in this context.
+
+To address this, we consider two alternative definitions: whether a track has any popularity (popularity > 0) and whether a track achieves high popularity (popularity >= 60). This distinction is motivated by our earlier tree and heatmap analyses, which suggest that gaining some popularity may involve different mechanisms than achieving very high popularity.
+
+We therefore employ logistic regression models to examine how audio features and genre influence these two outcomes. Logistic regression allows us to model the probability of a track being classified as “popular” under each definition, providing a complementary perspective to our earlier linear and tree-based models. We use this logistic regression model as a tool to better understand the reason why a song is popular, instead of a predicting model, therefore, we did not split the data into train and test sample, but instead using the regression model to compare the effect of predictors on the dependent variable (popularity).
+
+From the results summarized in the table, we find that danceability shows a consistently strong positive effect across both models, indicating that more rhythmically engaging tracks are more likely to gain attention and achieve high popularity. In contrast, valence has a negative effect, suggesting that more emotionally positive songs are not necessarily more successful.
+
+Interestingly, tempo is significant in predicting whether a track gains any popularity, but not in predicting highly popular tracks. This suggests that tempo may help a song attract initial attention, but does not determine whether it becomes widely successful.
+
+Overall, these findings indicate that gaining some popularity and achieving high popularity are driven by different factors. The reason for a song to gain some popularity and become very popular is not quite the same, however, genre remains the dominant influence across both definitions.
 
 # Audio Features + Genre + Explict - Meg 
 Does just explicitness help predict popularity?	We know there is statistical correlation, but...
