@@ -318,7 +318,7 @@ rpart.plot(
   shadow.col = "gray"
 )
 ```
-```{r, include = false}
+```{r, include = F}
 path.rpart(tree_model, nodes = rownames(tree_model$frame))
 ```
 
